@@ -50,17 +50,34 @@ local function handleTeamSelection(TeamSelectRemote)
 		-- Check guard team capacity
 		if teamName == "Guards" then
 			local guardCount = 0
+			local prisonerCount = 0
+			
+			-- Count both guards and prisoners
 			for _, p in ipairs(Players:GetPlayers()) do
 				if p.Team == team then
 					guardCount = guardCount + 1
+				elseif p.Team == Teams:FindFirstChild("Prisoners") then
+					prisonerCount = prisonerCount + 1
 				end
 			end
 			
-			local maxGuards = math.floor(Players.MaxPlayers * GameSettings.GUARD_RATIO)
-			if guardCount >= maxGuards then
-				-- Notify player that guard team is full
-				ReplicatedStorage.AnnounceRemote:FireClient(player, "Guard team is full!")
-				return
+			-- Only apply guard ratio check if we already have at least one guard
+			if guardCount > 0 then
+				local maxGuards = math.floor(Players.MaxPlayers * GameSettings.GUARD_RATIO)
+				
+				-- Allow joining guards if there are no prisoners, regardless of guard count
+				if prisonerCount == 0 then
+					player.Team = team
+					ReplicatedStorage.AnnounceRemote:FireClient(player, "Joined Guards team!")
+					return
+				end
+				
+				-- Otherwise, check normal guard capacity
+				if guardCount >= maxGuards then
+					-- Notify player that guard team is full
+					ReplicatedStorage.AnnounceRemote:FireClient(player, "Guard team is full!")
+					return
+				end
 			end
 		end
 		

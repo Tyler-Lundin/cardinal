@@ -21,6 +21,38 @@ Prison Royale Rules:
 ]]
 
 local MouseController = require(game:GetService("ReplicatedStorage").Modules.MouseController)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Function to handle team selection
+local function selectTeam(team)
+    print("Attempting to select team:", team)
+    
+    -- Wait for the remote event to be created
+    print("Waiting for Remotes folder...")
+    local remotesFolder = ReplicatedStorage:WaitForChild("Remotes")
+    print("Found Remotes folder")
+    
+    print("Waiting for SelectTeam event...")
+    local selectTeamEvent = remotesFolder:WaitForChild("SelectTeam")
+    print("Found SelectTeam event")
+    
+    -- Convert team name to match server expectations
+    local serverTeamName = team == "Prisoner" and "Prisoners" or "Guards"
+    print("Converted team name to:", serverTeamName)
+    
+    -- Fire the server to handle team selection
+    print("Firing SelectTeam event to server with team:", serverTeamName)
+    selectTeamEvent:FireServer(serverTeamName)
+    print("SelectTeam event fired successfully")
+    
+    -- Close the menu
+    if InitialMenu.currentMenu then
+        print("Closing menu...")
+        InitialMenu.currentMenu.destroy()
+        InitialMenu.currentMenu = nil
+        print("Menu closed")
+    end
+end
 
 function InitialMenu.create()
     print("InitialMenu.create() called")
@@ -55,7 +87,7 @@ function InitialMenu.create()
     local rulesFrame = Instance.new("Frame")
     rulesFrame.Name = "RulesFrame"
     rulesFrame.Size = UDim2.new(0.6, 0, 0.7, 0)
-    rulesFrame.Position = UDim2.new(0.2, 0, 0.15, 0)
+    rulesFrame.Position = UDim2.new(0.2, 0, 0.15, -100)
     rulesFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     rulesFrame.BorderSizePixel = 0
     rulesFrame.Parent = mainFrame
@@ -94,7 +126,7 @@ function InitialMenu.create()
     local teamFrame = Instance.new("Frame")
     teamFrame.Name = "TeamFrame"
     teamFrame.Size = UDim2.new(0.3, 0, 0.2, 0)
-    teamFrame.Position = UDim2.new(0.35, 0, 0.87, 0)
+    teamFrame.Position = UDim2.new(0.35, 0, 0.87, -100)
     teamFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     teamFrame.BorderSizePixel = 0
     teamFrame.Parent = mainFrame
@@ -124,6 +156,9 @@ function InitialMenu.create()
     prisonerButton.TextSize = 18
     prisonerButton.Font = Enum.Font.GothamBold
     prisonerButton.Parent = teamFrame
+    prisonerButton.MouseButton1Click:Connect(function()
+        selectTeam("Prisoner")
+    end)
     print("Created prisoner button")
     
     -- Create guard button
@@ -137,6 +172,9 @@ function InitialMenu.create()
     guardButton.TextSize = 18
     guardButton.Font = Enum.Font.GothamBold
     guardButton.Parent = teamFrame
+    guardButton.MouseButton1Click:Connect(function()
+        selectTeam("Guard")
+    end)
     print("Created guard button")
     
     -- Parent the screen GUI
@@ -152,7 +190,7 @@ function InitialMenu.create()
         game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
     end)
     
-    return {
+    local menu = {
         screenGui = screenGui,
         prisonerButton = prisonerButton,
         guardButton = guardButton,
@@ -162,6 +200,9 @@ function InitialMenu.create()
             end
         end
     }
+    
+    InitialMenu.currentMenu = menu
+    return menu
 end
 
 return InitialMenu 

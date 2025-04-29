@@ -8,18 +8,18 @@ local MouseController = {}
 
 -- Internal state
 local menusOpen = 0
-local isQHeld = false
+local isMouseUnlocked = false
 
 function MouseController:_updateMouseState()
-    if menusOpen > 0 or isQHeld then
-        -- A menu is open or Q is held => Unlock mouse and show cursor
+    if menusOpen > 0 or isMouseUnlocked then
+        -- A menu is open or F2 is toggled => Unlock mouse and show cursor
         player.CameraMode = Enum.CameraMode.Classic
         player.CameraMinZoomDistance = 0
-        player.CameraMaxZoomDistance = 10 -- Allow free view while menus open
+        player.CameraMaxZoomDistance = 0 -- Disable zoom completely
         UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         UserInputService.MouseIconEnabled = true
     else
-        -- No menus open and Q not held => Lock first person and hide cursor
+        -- No menus open and F2 not toggled => Lock first person and hide cursor
         player.CameraMinZoomDistance = 0
         player.CameraMaxZoomDistance = 0
         player.CameraMode = Enum.CameraMode.LockFirstPerson
@@ -28,17 +28,10 @@ function MouseController:_updateMouseState()
     end
 end
 
--- Handle Q key input
+-- Handle F2 key input
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.Q and not gameProcessed then
-        isQHeld = true
-        MouseController:_updateMouseState()
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.Q and not gameProcessed then
-        isQHeld = false
+    if input.KeyCode == Enum.KeyCode.F2 and not gameProcessed then
+        isMouseUnlocked = not isMouseUnlocked
         MouseController:_updateMouseState()
     end
 end)
